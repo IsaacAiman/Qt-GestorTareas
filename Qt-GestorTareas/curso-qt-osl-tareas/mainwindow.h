@@ -19,6 +19,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void updateCombo(QComboBox* combo);
     void onAddTarea();
     void onAddCategoria();
     void onTareasCellChanged(int row, int column);

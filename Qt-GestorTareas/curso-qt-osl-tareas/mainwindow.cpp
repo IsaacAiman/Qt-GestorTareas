@@ -76,16 +76,23 @@ MainWindow::~MainWindow()
 void MainWindow::onAddTarea()
 {
     addingTarea_ = true;
+    QComboBox* combo = new QComboBox();
+
+    updateCombo(combo);
+
 
     ui->tblTareas->insertRow(ui->tblTareas->rowCount()); //rowCount cuenta el número de filas que tiene la tabla.
     QTableWidgetItem* item = new QTableWidgetItem("");
+   // QWidget* item;
     item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
     item->setCheckState(Qt::Unchecked);
     ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 2, item);
     ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 0, new QTableWidgetItem(""));
     ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 1, new QTableWidgetItem(""));
-    ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 3, new QTableWidgetItem(""));
-//    ui->tblCateg->item(row, 0)->setData(Qt::UserRole, query.lastInsertId());
+    ui->tblTareas->setCellWidget(ui->tblTareas->rowCount()-1, 3, combo);
+    //ui->tblCateg->item(row, 0)->setData(Qt::UserRole, query.lastInsertId());
+
+
 
 
     addingTarea_ = false;
@@ -146,7 +153,6 @@ void MainWindow::onTareasCellChanged(int row, int column)
 
 void MainWindow::onCategCellChanged(int row, int column)
 {
-    qDebug() << "hola holita vecinito";
     if (addingCateg_)
         return;
 
@@ -160,17 +166,13 @@ void MainWindow::onCategCellChanged(int row, int column)
                  .arg(ui->tblCateg->item(row, 0)->text())\
                  .arg(ui->txtCategDescr->toPlainText()));
         ui->tblCateg->item(row, 0)->setData(Qt::UserRole, query.lastInsertId());
-        qDebug () << "if";
 
     } else {
-        qDebug()<<"else :" <<row;
         query = db_.exec("UPDATE categorias "
                  "SET "+QString("name='%1',descripcion='%2'")\
                  .arg(ui->tblCateg->item(row, 0)->text())\
                  .arg(ui->txtCategDescr->toPlainText()) +
                  "WHERE id = " + ui->tblCateg->item(row, 0)->data(Qt::UserRole).toString() + ";");
-        qDebug()<<"else :" <<row;
-        qDebug()<<"else :" << ui->tblCateg->item(row, 0)->text();
     }
 
     //actualizamos el combo malpario
@@ -225,4 +227,17 @@ void MainWindow::onLoadTareas()
     //Activamos el sorting en la tabla de categorias
     ui->tblTareas->setSortingEnabled(true);
     addingTarea_ = false;
+}
+
+void MainWindow::updateCombo(QComboBox *combo){
+
+    QSqlQuery q = db_.exec("SELECT * "
+                           "FROM categorias;");
+
+    while (q.next()) {
+        //Añadimos la categoria al combo y como userData su ID
+        combo->addItem(GetField(q,"name").toString(), GetField(q,"id").toInt());
+    }
+
+
 }
