@@ -36,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
               "id_etiq INTEGER"
               ");");
 
+
+
     connect(ui->actionNuevaTarea,   SIGNAL(triggered()),                this, SLOT(onAddTarea()));
     connect(ui->tblTareas,          SIGNAL(cellChanged(int,int)),       this, SLOT(onTareasCellChanged(int,int)));
     connect(ui->tblCateg,           SIGNAL(cellChanged(int,int)),       this, SLOT(onCategCellChanged(int,int)));
@@ -57,8 +59,10 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->tblCateg->insertRow(rowNumber);
         QTableWidgetItem* item = new QTableWidgetItem(GetField(q, "name").toString());
         ui->tblCateg->setItem(rowNumber, 0, item);
+        ui->tblCateg->item(rowNumber, 0)->setData(Qt::UserRole, GetField(q, "id"));
     }
     //Activamos el sorting en la tabla de categorias
+    addingCateg_=false;
     ui->tblCateg->setSortingEnabled(true);
 
     ui->comboCategoria->setCurrentIndex(0);
@@ -81,6 +85,7 @@ void MainWindow::onAddTarea()
     ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 0, new QTableWidgetItem(""));
     ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 1, new QTableWidgetItem(""));
     ui->tblTareas->setItem(ui->tblTareas->rowCount()-1, 3, new QTableWidgetItem(""));
+//    ui->tblCateg->item(row, 0)->setData(Qt::UserRole, query.lastInsertId());
 
 
     addingTarea_ = false;
