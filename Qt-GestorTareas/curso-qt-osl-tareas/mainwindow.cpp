@@ -6,7 +6,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+   combo = new QComboBox;
     ui->setupUi(this);
+
+
+    //typeComboBox = new QComboBox();
 
     //Setup database
     ConecToDb(db_, "tareas");
@@ -42,6 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->tblTareas,          SIGNAL(cellChanged(int,int)),       this, SLOT(onTareasCellChanged(int,int)));
     connect(ui->tblCateg,           SIGNAL(cellChanged(int,int)),       this, SLOT(onCategCellChanged(int,int)));
     connect(ui->comboCategoria,     SIGNAL(currentIndexChanged(int)),   this, SLOT(onLoadTareas()));
+    connect(combo,                  SIGNAL(currentIndexChanged(int)),   this, SLOT(onLoadTareas()));
     connect(ui->actionNuevaCateg,   SIGNAL(triggered()),                this, SLOT(onAddCategoria()));
 
     addingTarea_ = false;
@@ -49,6 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //Obtenemos las categorias
     QSqlQuery q = db_.exec("SELECT * "
                            "FROM categorias;");
+
 
     while (q.next()) {
         //Añadimos la categoria al combo y como userData su ID
@@ -75,9 +81,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::onAddTarea()
 {
+    qDebug() <<"asdasd";
     addingTarea_ = true;
-    QComboBox* combo = new QComboBox();
-
+    combo = new QComboBox;
     updateCombo(combo);
 
 
@@ -119,11 +125,17 @@ void MainWindow::onTareasCellChanged(int row, int column)
     if (addingTarea_)
         return;
 
+    ui->tblTareas->item(row, 2);
+    //qDebug() << ui->tblTareas->cellWidget(row, 2);
+
     addingTarea_ = true;
 
     int checked = (ui->tblTareas->item(row, 2)->checkState() == Qt::Checked);
 
     QSqlQuery query;
+
+    qDebug() << combo->currentData().toInt();
+
 
     if (ui->tblTareas->item(row, 0)->data(Qt::UserRole).isNull()) {
         query = db_.exec("INSERT INTO tareas (name, descripcion, date, done, id_categ) "
@@ -132,8 +144,8 @@ void MainWindow::onTareasCellChanged(int row, int column)
                  .arg(ui->txtTareaDescr->toPlainText())\
                  .arg(ui->tblTareas->item(row, 1)->text())\
                  .arg(checked)\
-                 .arg(ui->comboCategoria->currentData().toInt()));
-        ui->tblTareas->item(row, 0)->setData(Qt::UserRole, query.lastInsertId());
+                 .arg(combo->currentData().toInt()));
+       ui->tblTareas->item(row, 0)->setData(Qt::UserRole, query.lastInsertId());
     } else {
         query = db_.exec("UPDATE tareas "
                  "SET "+QString("name='%1',descripcion='%2',date='%3',done='%4',id_categ='%5' " )\
@@ -141,7 +153,7 @@ void MainWindow::onTareasCellChanged(int row, int column)
                  .arg(ui->txtTareaDescr->toPlainText())\
                  .arg(ui->tblTareas->item(row, 1)->text())\
                  .arg(checked)\
-                 .arg(ui->comboCategoria->currentData().toInt()) +
+                 .arg(combo->currentData().toInt()) +
                  "WHERE id = " + ui->tblTareas->item(row, 0)->data(Qt::UserRole).toString() + ";");
     }
 
@@ -203,6 +215,9 @@ void MainWindow::onLoadTareas()
     QSqlQuery q = db_.exec("SELECT * "
                  "FROM tareas "
                  "WHERE id_categ = " + ui->comboCategoria->currentData().toString());
+    QSqlQuery h = db_.exec("SELECT * "
+                           "FROM categorias"
+                           "WHERE id = " + ui->comboCategoria->currentData().toString());
 
     while (q.next()) {
         //Añadimos la tarea a la tabla de categorias
@@ -223,8 +238,11 @@ void MainWindow::onLoadTareas()
         else
             item->setCheckState(Qt::Unchecked);
         ui->tblTareas->setItem(rowNumber, 2, item);
+
+        ui->tblTareas->setItem(rowNumber, 3, new QTableWidgetItem(GetField(h, "name").toString()));
     }
-    //Activamos el sorting en la tabla de categorias
+    //Activamos el sorting en la tabla de categorias.
+
     ui->tblTareas->setSortingEnabled(true);
     addingTarea_ = false;
 }

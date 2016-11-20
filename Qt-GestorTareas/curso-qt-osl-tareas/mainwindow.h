@@ -27,6 +27,10 @@ private slots:
     void onLoadTareas();
 
 private:
+    //QComboBox* combo;
+    //QComboBox* typeComboBox;
+    QToolBar*       toolBar_;
+    QComboBox *combo;
     Ui::MainWindow *ui;
     QSqlDatabase db_;
     bool addingTarea_;
